@@ -98,7 +98,7 @@ const AppLayout = props => {
         )}
       </Frame>
     </Centered>
-    <Footer />
+    <Footer/>
   </div>;
 };
 
