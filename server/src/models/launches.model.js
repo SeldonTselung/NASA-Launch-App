@@ -20,12 +20,12 @@ saveLaunch(launch);
 
 const SPACEX_API_URL = "https://api.spacexdata.com/v4/launches/query"
 
-async function populateLaunches() {
-    console.log('Poup launch data...');
+async function populateLaunches() { //make a req to spaceX API
+    console.log('Populate launch data...');
     const response = await axios.post(SPACEX_API_URL, { //req body
         query: {},
         options: {
-            pagination: false, //to turn off pagination of data by server
+            pagination: false, //to turn off pagination of data from spaceX server
             populate: [
                 {
                     path: 'rocket',
@@ -44,13 +44,19 @@ async function populateLaunches() {
         
     });
 
+    if (response.status !== 200) {
+        console.log('Problem downloading launch data');
+        throw new Error('Launch data download failed!');
+    }
+
     const launchDocs = response.data.docs; //response.data is what we get back from response
     for (const launchDoc of launchDocs) {
         const payloads = launchDoc['payloads'];
+        //take launch properties from Mongo and map them to launch properties in our API response 
         const customers = payloads.flatMap((payload) => {
             return payload['customers'];
         });
-
+        
         const launch = {
             flightNumber: launchDoc['flight_number'],
             mission: launchDoc['name'],
@@ -58,7 +64,7 @@ async function populateLaunches() {
             launchDate: launchDoc['date_local'],
             upcoming: launchDoc['upcoming'],
             success: launchDoc['success'],
-            customers: customers,
+            customers,
         };
         console.log(`${launch.flightNumber} ${launch.mission}`);
 
@@ -67,7 +73,7 @@ async function populateLaunches() {
 }
 
 async function loadLaunchData() {
-    //since this is an expensive operation, we will download only launchdata 
+    //since this is an expensive operation, we will download launchdata only once
     //that we don't already have based on these filters
     const firstLaunch = await findLaunch({
         flightNumber: 1,
@@ -83,14 +89,6 @@ async function loadLaunchData() {
 
 
 async function saveLaunch(launch) {
-    //maintaining referential integrity to make sure we're targetting a valid planet
-    const planet = await planets.findOne({
-        keplerName: launch.target,
-    });
-    if (!planet) {
-        //we'll throw a new error using Node's built in error class
-        throw new Error('No matching planet found');
-    }
     //saving to mongoDB
     await launchesDB.findOneAndUpdate({ //this is better than updateOne becuz this will only return
         //the properties that we set in our update
@@ -100,12 +98,22 @@ async function saveLaunch(launch) {
     launch, // object to update
      {
         upsert: true, // 
-    })
+    });
 }
 
 //save launch from client into mongoDB
 async function saveNewLaunch(launch) {
+    //maintaining referential integrity to make sure we're targetting a valid planet
+    const planet = await planets.findOne({
+        keplerName: launch.target,
+    });
+    if (!planet) {
+        //we'll throw a new error using Node's built in error class
+        throw new Error('No matching planet found');
+    }
+
     const latestFlightNumber = await getLatestFlightNumber() + 1;
+
     const newLaunch = Object.assign(launch, {
         flightNumber: latestFlightNumber,
         customers: ['ZTM', 'NASA'],
