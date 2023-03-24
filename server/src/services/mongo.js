@@ -1,7 +1,8 @@
 const mongoose = require('mongoose'); 
-
+//we require .env here so that npm test can connect MongoDB.
+require('dotenv').config();
 //database url
-const MONGO_URL = 'mongodb+srv://nasa-api:12BVTJjEk64Innae@cluster0.18b9z6o.mongodb.net/nasa?retryWrites=true&w=majority';
+const MONGO_URL = process.env.MONGO_URL;
 
 mongoose.connection.once('open', () => {
     console.log('MongoDB connection ready!')
