@@ -1,6 +1,7 @@
 const mongoose = require('mongoose'); 
 //we require .env here so that npm test can connect MongoDB.
 require('dotenv').config();
+
 //database url
 const MONGO_URL = process.env.MONGO_URL;
 
@@ -23,4 +24,4 @@ async function mongoDisconnect() {
 module.exports = {
     mongoConnect,
     mongoDisconnect,
-}
+}   
