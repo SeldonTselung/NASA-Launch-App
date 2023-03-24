@@ -4,21 +4,6 @@ const planets = require('./planets.mongo');
 
 const defaultFlightNumber = 101;
 
-//to map the properties to the correct values in the SpaceX API
-const launch = {
-    flightNumber: defaultFlightNumber, //flight_number
-    mission: "Kepler Exploration X", //name
-    rocket: 'Explorer IS1', //rocket.name
-    launchDate: new Date('December 27, 2030'), //date_local
-    target: 'Kepler-442 b', //not applicable
-    customers: ['ZTM', 'NASA'],//each payload has multiple customers payload.customers
-    upcoming: true, //upcoming
-    success: true, //success
-}
-
-//save launch into mongoDB 
-saveLaunch(launch);
-
 const SPACEX_API_URL = "https://api.spacexdata.com/v4/launches/query"
 
 //make a req to spaceX API
