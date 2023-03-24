@@ -5,11 +5,17 @@ const {
     existsLaunchWithId,
 } = require('../../models/launches.model');
 
-//async because getAllLaunches is async
+const {
+    getPagination
+} = require('../../services/query'); 
+
 async function httpGetAllLaunches (req, res) {
-    //first convert to js
-    return res.status(200).json(await getAllLaunches()); 
-    // return makes sure only 1 response is sent
+    //everytime a get req is sent to the server, 
+    console.log(req.query); //query has the parameters we set after '?'
+    const { skip, limit } = getPagination(req.query);
+    const launches = await getAllLaunches(skip, limit)
+    //convert to js 
+    return res.status(200).json(launches); 
 }
 
 async function httpPostNewLaunch (req, res) {

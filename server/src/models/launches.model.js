@@ -4,13 +4,14 @@ const planets = require('./planets.mongo');
 
 const defaultFlightNumber = 101;
 
+//to map the properties to the correct values in the SpaceX API
 const launch = {
     flightNumber: defaultFlightNumber, //flight_number
     mission: "Kepler Exploration X", //name
-    rocket: 'Explorer IS1', //exists in our api response's rocket.name
+    rocket: 'Explorer IS1', //rocket.name
     launchDate: new Date('December 27, 2030'), //date_local
     target: 'Kepler-442 b', //not applicable
-    customers: ['ZTM', 'NASA'],//payloads is an arr with multiple customers payload.customers
+    customers: ['ZTM', 'NASA'],//each payload has multiple customers payload.customers
     upcoming: true, //upcoming
     success: true, //success
 }
@@ -20,9 +21,10 @@ saveLaunch(launch);
 
 const SPACEX_API_URL = "https://api.spacexdata.com/v4/launches/query"
 
-async function populateLaunches() { //make a req to spaceX API
-    console.log('Populate launch data...');
-    const response = await axios.post(SPACEX_API_URL, { //req body
+//make a req to spaceX API
+async function populateLaunches() { 
+    console.log('Populating launch data...');
+    const response = await axios.post(SPACEX_API_URL, { //req body same as body in postman
         query: {},
         options: {
             pagination: false, //to turn off pagination of data from spaceX server
@@ -36,27 +38,26 @@ async function populateLaunches() { //make a req to spaceX API
                 {
                     path: 'payloads',
                     select: {
-                        'customers': 1
+                        customers: 1
                     }
                 }
             ]
         }
-        
     });
 
     if (response.status !== 200) {
         console.log('Problem downloading launch data');
-        throw new Error('Launch data download failed!');
+        throw new Error('Launch data download failed');
     }
 
-    const launchDocs = response.data.docs; //response.data is what we get back from response
+    const launchDocs = response.data.docs; //response.data is the response object
     for (const launchDoc of launchDocs) {
         const payloads = launchDoc['payloads'];
-        //take launch properties from Mongo and map them to launch properties in our API response 
+        //using flatMap because payloads is an arr of objects of many customers
         const customers = payloads.flatMap((payload) => {
             return payload['customers'];
         });
-        
+        //mapping launch to SpaceX API
         const launch = {
             flightNumber: launchDoc['flight_number'],
             mission: launchDoc['name'],
@@ -67,12 +68,12 @@ async function populateLaunches() { //make a req to spaceX API
             customers,
         };
         console.log(`${launch.flightNumber} ${launch.mission}`);
-
-        //populate launches collection...
+        //save launch to MongoDB
+        await saveLaunch(launch);
     }
 }
 
-async function loadLaunchData() {
+async function loadLaunchesData() {
     //since this is an expensive operation, we will download launchdata only once
     //that we don't already have based on these filters
     const firstLaunch = await findLaunch({
@@ -94,9 +95,8 @@ async function saveLaunch(launch) {
         //the properties that we set in our update
         //if there's an existing flightNumber, then don't update that 
         flightNumber: launch.flightNumber, //takes the filter
-    }, 
-    launch, // object to update
-     {
+    }, launch, // object to update
+    {
         upsert: true, // 
     });
 }
@@ -136,10 +136,16 @@ async function getLatestFlightNumber() {
 }
 
 //get all the launches from mongoDB launches collection
-async function getAllLaunches() {
-    return await launchesDB.find({}, {
-        '_id': 0, '__v': 0,
+//and filters out id and version properties from each doc
+async function getAllLaunches(skip, limit) {
+    return await launchesDB
+    .find({}, {
+        '_id': 0, 
+        '__v': 0,
     })
+    .sort({ flightNumber: 1 }) // 1 for ascending & -1 for descending in MongoDB.
+    .skip(skip)
+    .limit(limit);
 }
 
 async function findLaunch(filter) {
@@ -166,9 +172,9 @@ async function abortLaunchById(launchId) {
 } 
 
 module.exports = {
-    loadLaunchData,
+    loadLaunchesData,
     getAllLaunches,
     saveNewLaunch,
-    abortLaunchById,
     existsLaunchWithId,
+    abortLaunchById,
 }
