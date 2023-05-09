@@ -1,33 +1,42 @@
 const request = require('supertest'); 
-//using supertest to start up our server and make req 
-//directly against express in the app file. however we connect to mongo in server.js,which 
-//starts server there. So we're not connecting to mongoDB when we run jest.
+/*  
+    using supertest to start up our server and make req 
+    directly against express in the app file. however we connect to mongo in server.js,which 
+    starts server there. So we're not connecting to mongoDB when we run jest.
+*/
 
 const app = require('../../app');
 
-// we need to keep connection to mongo alive for both tests by wrapping the 
-// 2 tests in another describe block and using a before all block inside that.
+/*  we need to keep connection to mongo alive for both tests by wrapping the 
+    2 tests in another describe block and using a before all block inside that. */
+
 const {
     mongoConnect,
     mongoDisconnect, 
 } = require ('../../services/mongo');
 
-//we are creating end-to-end test so everytime we run the test, the post req
-//will actually populate our database so we have to be careful about that.
-//if we run these tests a lot, we should create a specific test db for our test
-//data to separate it from production database.
+/*
+    we are creating end-to-end test so everytime we run the test, the post req
+    will actually populate our database so we have to be careful about that.
+    if we run these tests a lot, we should create a specific test db for our test
+    data to separate it from production database.
+*/
 
 describe('Launches API', () => {
     beforeAll(async () => {
         await mongoConnect();
-        //we need to explicitly disconnect from mongoDB after the test completes
-        //so the connection isn't forever. 
+        /* 
+        we need to explicitly disconnect from mongoDB after the test completes
+        so the connection isn't forever.
+        */
     });
 
     afterAll(async () => {
         await mongoDisconnect();
-        //we need to explicitly disconnect from mongoDB after the test completes
-        //so the connection isn't forever. 
+        /*
+        we need to explicitly disconnect from mongoDB after the test completes
+        so the connection isn't forever
+        */
     })
 
     describe("Test GET /launches", () => {

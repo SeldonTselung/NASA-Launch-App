@@ -93,7 +93,7 @@ async function saveNewLaunch(launch) {
         keplerName: launch.target,
     });
     if (!planet) {
-        //we'll throw a new error using Node's built in error class
+        //throw a new error using Node's built in error class
         throw new Error('No matching planet found');
     }
 
@@ -105,7 +105,6 @@ async function saveNewLaunch(launch) {
         upcoming: true,
         success: true,
     });
-    //console.log(newLaunch)
     await saveLaunch(newLaunch);
 }
 

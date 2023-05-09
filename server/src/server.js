@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 8000;
 const server = http.createServer(app);
 
 async function startServer() {
-    await mongoConnect(); //
+    await mongoConnect(); //start connection to mongoDB
     await loadPlanetsData(); //Kepler's data from planets model
     await loadLaunchesData(); //Launch data from launch model
     server.listen(PORT, () => {

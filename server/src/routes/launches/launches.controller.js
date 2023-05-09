@@ -19,7 +19,7 @@ async function httpGetAllLaunches (req, res) {
 }
 
 async function httpPostNewLaunch (req, res) {
-    //console.log(req.body)
+    
     const launch = req.body;
     if (!launch.mission || !launch.rocket || !launch.launchDate 
         || !launch.target) {
@@ -33,17 +33,19 @@ async function httpPostNewLaunch (req, res) {
             error: 'Invalid launch date',
         });
     }
-    //console.log(launch)
+    
     await saveNewLaunch(launch); //save from client into Mongo
-    //this must be mutating our launch object, changing the properties and 
-    //adding data that mongoose gets back from our db onto the very same object that we passed in
-    //console.log(launch)
-    return res.status(201).json(launch); // return the data created with 201
+    /*
+    this must be mutating our launch object, changing the properties and 
+    adding data that mongoose gets back from our db onto the very same object 
+    that we passed in
+    */
+    return res.status(201).json(launch); // returns the data created with 201
 }
 
 
 async function httpAbortLaunch (req, res) {
-    const launchId = Number(req.params.id); // cuz this gives a string
+    const launchId = Number(req.params.id); // to convert from a string
     const existsLaunch = await existsLaunchWithId(launchId);
      //if launch !exist return 404
     if (!existsLaunch) {
