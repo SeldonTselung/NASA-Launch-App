@@ -149,9 +149,11 @@ async function abortLaunchById(launchId) {
     }, {
         upcoming: false,
         success: false,
-    });//no upsert parameter becuz we don't want to insert a document into launches
-    //collection if one doesn't exist. 
-    // response from mongoDB that shows that it was successfully aborted
+    });
+    /* no upsert parameter becuz we don't want to insert a document into launches
+    collection if one doesn't exist. response from mongoDB that shows that
+    */
+
     return aborted.modifiedCount === 1;  
 } 
 
